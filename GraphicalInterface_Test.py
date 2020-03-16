@@ -17,16 +17,20 @@ menu = Menu(root)
 root.config(menu=menu)
 fileMenu = Menu(menu)
 
+
 def showHelp():
     messagebox.showinfo(title="About", message=readFile("help.txt"))
+
 
 def openFile():
     myFile = filedialog.askopenfilename()
     # displayfilename.configure(text="File Name: " + myFile + "\n")
     # displayfilecontent.configure(text="File Content: " + readFile(myFile) + "\n")
 
+
 def saveAs():
     filedialog.asksaveasfilename()
+
 
 # Definition of the read method which takes a file
 def readFile(filename):
@@ -37,10 +41,12 @@ def readFile(filename):
     else:
         print("File not found")
 
+
 def createFile():
     file = open("cryptography.txt","w+")
     file.write("The lazy dog chasese after the quick brown fox.")
     file.close
+
 
 # Definition of the write method
 def writeFile(context, filename):
@@ -49,25 +55,27 @@ def writeFile(context, filename):
     with open(filename, "w") as file:
         file.write(context)
         file.seek(0)
- 
-#root = Tk()
 
+
+# root = Tk()
 def main():
 
-    #root = Tk()
+    # root = Tk()
     root.geometry("400x200")
-    #root.geometry("300x300+300+300")
-    crypto_app = Window()   #Variable not used
+    # root.geometry("300x300+300+300")
+    crypto_app = Window()   # Variable not used
     crypto_app.master.maxsize(750, 530)
     crypto_app.master.protocol("WM_DELETE_WINDOW", quitApp)
     root.mainloop()
+
 
 def quitApp():
     if messagebox.askokcancel("Confirm Exit", "Do you really wish to quit?"):
         root.destroy()
 
+
 # Menu bar items
-#fileMenu = Menu(menu)
+# fileMenu = Menu(menu)
 menu.add_cascade(label="File", menu=fileMenu)
 fileMenu.add_command(label="Open", command=openFile)
 fileMenu.add_command(label="Save As", command=saveAs)
@@ -85,7 +93,7 @@ menu.add_cascade(label="Help", menu=helpMenu)
 helpMenu.add_command(label="About", command=showHelp)
 
 
-######################### MAIN WINDOW ITEMS #########################
+# ######################## MAIN WINDOW ITEMS #########################
 
 # labels = ['Input From File:', 'Key:', 'IV:', 'Output:']
 # r = 0
@@ -100,7 +108,6 @@ class Window(Frame):
         super().__init__()
 
         self.initUI()
-
 
     def initUI(self):
         master = self.master
@@ -148,6 +155,7 @@ class Window(Frame):
         frame6.pack(fill=X)
         status = Label(frame6, text="Cryptographer_1.0 \u00AE All rights reserved", justify=CENTER)
         status.pack(side=BOTTOM, padx=5, pady=10, anchor=S)
-        
+
+
 if __name__ == '__main__':
     main()

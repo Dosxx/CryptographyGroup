@@ -41,7 +41,6 @@ class Window(Frame):
         menu = Menu(self.master)
         self.master.config(menu=menu)
 
-
         # Menu bar items
         fileMenu = Menu(menu)
         menu.add_cascade(label="File", menu=fileMenu)
