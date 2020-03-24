@@ -1,23 +1,24 @@
 Guide to Encrypt and Decrypt a File
 ******************************************
-1-Encrypt a File:
-Click Action in Menubar, select Generate
-Key and follow the prompts click Save to
-save the key for encryption
-From the Menubar, click File then Open
-to chose a file to encrypt. the chosen
-file name should be displayed on the
-screen. Click on Action in the Menubar
-again to select Encrypt to encrypt it.
+1-ENCRYPT A FILE:
+First click File then Open to choose a file
+to encrypt.
+Second, click the Action and select Generate
+Key if you don't have a key and IV.
+Finally, click encrypt button. You can
+then click Save as to save the encrypted
+content to a file of your choice.
 *******************************************
-2-Decrypt a File:
-Make sure the Key and IV used to encrypt
-the file are displayed. If the File is
-already opened and the filename displayed,
-then click Action > Decrypt from the menubar
-else, click File > Open to select the
-encrypted file, then click Action > Decrypt
-to decrypt the selected file.
+2-DECRYPT A FILE:
+First, select File the Open to choose a file
+to decrypt.
+Second, make sure the Key and IV used to
+encrypt the file are entered in the appropriate
+field.
+Finally, click the Decrypt button to decrypt
+your file. If the File is already opened and
+the encrypted content is displayed, then
+click Decrypt to decrypt the selected file.
 *******************************************
 About Cryptographer_1.0
 created by Kekeli and Uni A for ICS483

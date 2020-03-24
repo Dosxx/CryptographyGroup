@@ -8,24 +8,24 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
 
+# noinspection PyMethodMayBeStatic
 class MyCipher:
-    def __init__(self):
-        self.initialvalue = b''
-
     def encryptAES_128(self, plaintext, key):
-        cipher = AES.new(key, AES.MODE_CBC)
-        plaintext = str.encode(plaintext)
-        encrypted = cipher.encrypt(pad(plaintext, AES.block_size))
-        self.initialvalue = b64encode(cipher.iv).decode('utf-8')
-        ciphertext = b64encode(encrypted).decode('utf-8')
-        result = (self.initialvalue, ciphertext)
-        return result
+        try:
+            plaintext = str.encode(plaintext)
+            cipher = AES.new(b64decode(key), AES.MODE_CBC)
+            encrypted = cipher.encrypt(pad(plaintext, AES.block_size))
+            ciphertext = b64encode(encrypted).decode('utf-8')
+            result = (b64encode(cipher.iv).decode('utf-8'), ciphertext)
+            return result
+        except ValueError as error:
+            error = "Something went wrong try again!"
+            return error
 
     def decryptAES_128(self, key, iv, ciphertext):
         try:
-            self.initialvalue = b64decode(iv)
             ciphertext = b64decode(ciphertext)
-            cipher = AES.new(key, AES.MODE_CBC, self.initialvalue)
+            cipher = AES.new(b64decode(key), AES.MODE_CBC, b64decode(iv))
             plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size).decode()
             return plaintext
         except ValueError as error:
@@ -34,11 +34,11 @@ class MyCipher:
 
     def keygen(self):
         # Generate a random 16-bytes (128-bits)key and return it to the caller
-        key = get_random_bytes(16)
-        # print(key.hex().upper())
-        return key
+        keyString = b64encode(get_random_bytes(16)).decode('utf-8')
+        return keyString
 
 
+################### Test codes ###############################
 # c = MyCipher()
 # myKey = c.keygen()
 # print(myKey.hex().upper())
