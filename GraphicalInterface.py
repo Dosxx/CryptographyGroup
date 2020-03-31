@@ -2,6 +2,7 @@
 # Authors: Kekeli D Akouete, Vang Uni A
 # Implementing encryption in an application
 
+from base64 import b64decode
 from tkinter import filedialog
 from tkinter import *
 from tkinter import messagebox
@@ -82,9 +83,14 @@ def openfile():
 # Definition of the read method which takes a file
 def readfile(file):
     if os.path.exists(file):
-        with open(file, "r") as fd:
-            file_content = fd.read()
-            return file_content
+        if file.__contains__(".txt"):
+            with open(file, "r") as fd:
+                file_content = fd.read()
+                return file_content
+        elif file.__contains__(".png") or file.__contains__(".jpeg") or file.__contains__(".jpg"):
+            with open(file, "rb") as fd:
+                file_content = fd.read()
+                return "File Not Supported"  # file_content
     else:
         return "File not found"
 
@@ -108,15 +114,22 @@ def generate_key_callback():
 def encrypt_callback():
     if filename.get() == '':
         # Request the input file
-        messagebox.showinfo(title="Error", message="Please Select a Valid File Path!")
+        messagebox.showwarning(title="Error", message="Please Select a Valid File Path!")
         fileEntry.focus_set()
-    elif keyString.get() == "" or len(keyString.get()) < 16:
+    elif len(keyString.get()) < 24:
         # Validate the key and key length
-        messagebox.showinfo(title="Error", message="Please Enter a valid Key!")
+        messagebox.showwarning(title="Error", message="Please Enter a valid Key!")
         keyEntry.focus_set()
-    elif len(readfile(filename.get())) == 14:
+    elif readfile(filename.get()).__contains__("File not found"):
         # Validate the input file path
-        messagebox.showinfo(title="Error", message="File Not Found!")
+        messagebox.showwarning(title="Error", message="File Not Found!")
+        fileEntry.focus_set()
+    elif len(readfile(filename.get())) == 0:
+        messagebox.showwarning(title="Error", message="File is Empty")
+        fileEntry.focus_set()
+    elif readfile(filename.get()).__contains__("Not Supported"):
+        messagebox.showwarning(title="Error", message="File Not Supported")
+        clear_callback()
         fileEntry.focus_set()
     else:
         # Encryption process
@@ -129,19 +142,19 @@ def encrypt_callback():
 # Action to perform when user click decrypt button
 def decrypt_callback():
     if filename.get() == '':
-        messagebox.showinfo(title="Error", message="Please Select an Input first!")
+        messagebox.showwarning(title="Error", message="Please Select an Input first!")
         fileEntry.focus_set()
     elif outputResult.get() != '':
         plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), outputResult.get())
-        if plnText != "Wrong key or IV provided":
-            outputResult.set(plnText)
-        else:
-            messagebox.showinfo(title="Error", message=plnText)
+        if plnText == "Wrong key or IV provided" or plnText == "Incorrect Encoding":
+            messagebox.showwarning(title="Error", message=plnText)
             keyEntry.focus_set()
+        else:
+            outputResult.set(plnText)
     else:
         plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), readfile(filename.get()))
         if plnText == "Wrong key or IV provided":
-            messagebox.showinfo(title="Error", message=plnText)
+            messagebox.showwarning(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
             outputResult.set(plnText)
@@ -185,7 +198,6 @@ cipher = MyCipher()
 crypto_app = Window(root)
 crypto_app.master.title("Cryptographer1.0")
 root.geometry("650x350")
-crypto_app.master.maxsize(750, 530)
 crypto_app.master.protocol("WM_DELETE_WINDOW", quitApp)
 
 # File entry input widget definition
@@ -220,12 +232,14 @@ ivEntry.pack(fill=X, padx=5, expand=True)
 
 # Output widget definition
 frame4 = Frame()
-frame4.pack(fill=X)
 outputLabel = Label(frame4, text="Output:", width=9)
 outputLabel.pack(side=LEFT, padx=5, pady=5)
 outputResult = StringVar()
-outputText = Label(frame4, textvariable=outputResult)
-outputText.pack(fill=X, padx=5, pady=5, expand=True)
+outputText = Label(frame4, textvariable=outputResult,
+                   bg="black", fg="white",
+                   takefocus=TRUE, justify=LEFT)
+outputText.pack(fill=X, padx=5, pady=5, expand=TRUE)
+frame4.pack(fill=X, expand=FALSE)
 
 #  Buttons widget definition
 frame5 = Frame(relief=RAISED, borderwidth=0)
@@ -250,4 +264,7 @@ crypto_app.mainloop()
 # keyTf.extend(mykey)
 # keyString.set(mykey.hex().upper())
 # print("IV: " + c[0] + "\n", "Cipher Text: " + c[1])
+# scrollbar = Scrollbar(frame4)
+# scrollbar.pack(side=RIGHT, fill=Y)
+# scrollbar.config(command="")
 
