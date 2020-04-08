@@ -20,7 +20,7 @@ def file_callback(event):
 
 
 def iv_callback(event):
-    outputText.focus_set()
+    display.focus_set()
 
 
 # Clear the input fields
@@ -28,7 +28,7 @@ def clear_callback():
     filename.set("")
     keyString.set("")
     ivTf.set("")
-    outputResult.set("")
+    display.delete(1.0, END)
     fileEntry.focus_set()
 
 
@@ -37,7 +37,7 @@ def saveAs():
     # Save your work to a file
     fname = filedialog.asksaveasfilename()
     if fname != '':
-        writefile(outputResult.get(), fname)
+        writefile(display.get(1.0, END), fname)
 
 
 # Save keys function
@@ -65,10 +65,7 @@ def openfile():
             saveAs()
         else:
             # Clear the variables values
-            filename.set("")
-            keyString.set("")
-            ivTf.set("")
-            outputResult.set("")
+            clear_callback()
             openfile()
     else:
         # open the dialog widget
@@ -114,18 +111,18 @@ def generate_key_callback():
 def encrypt_callback():
     if filename.get() == '':
         # Request the input file
-        messagebox.showwarning(title="Error", message="Please Select a Valid File Path!")
+        messagebox.showerror(title="Error", message="Please Select a Valid File Path!")
         fileEntry.focus_set()
     elif len(keyString.get()) < 24:
         # Validate the key and key length
-        messagebox.showwarning(title="Error", message="Please Enter a valid Key!")
+        messagebox.showerror(title="Error", message="Please Enter a valid Key!")
         keyEntry.focus_set()
     elif readfile(filename.get()).__contains__("File not found"):
         # Validate the input file path
-        messagebox.showwarning(title="Error", message="File Not Found!")
+        messagebox.showerror(title="Error", message="File Not Found!")
         fileEntry.focus_set()
     elif len(readfile(filename.get())) == 0:
-        messagebox.showwarning(title="Error", message="File is Empty")
+        messagebox.showerror(title="Error", message="File is Empty")
         fileEntry.focus_set()
     elif readfile(filename.get()).__contains__("Not Supported"):
         messagebox.showwarning(title="Error", message="File Not Supported")
@@ -136,28 +133,34 @@ def encrypt_callback():
         plaintext = readfile(filename.get())
         c = cipher.encryptAES_128(plaintext, keyString.get())
         ivTf.set(c[0])
-        outputResult.set(c[1])
+        display.delete(1.0, END)
+        display.insert(INSERT, c[1])
 
 
 # Action to perform when user click decrypt button
 def decrypt_callback():
     if filename.get() == '':
-        messagebox.showwarning(title="Error", message="Please Select an Input first!")
+        messagebox.showerror(title="Error", message="Please Select an Input first!")
         fileEntry.focus_set()
-    elif outputResult.get() != '':
-        plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), outputResult.get())
+    elif len(display.get(1.0, END)) > 1:
+        plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), display.get(1.0, END))
         if plnText == "Wrong key or IV provided" or plnText == "Incorrect Encoding":
-            messagebox.showwarning(title="Error", message=plnText)
+            messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            outputResult.set(plnText)
-    else:
+            display.delete(1.0, END)
+            display.insert(INSERT, plnText)
+    elif keyString.get() != '' and ivTf.get() != '':
         plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), readfile(filename.get()))
         if plnText == "Wrong key or IV provided":
-            messagebox.showwarning(title="Error", message=plnText)
+            messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            outputResult.set(plnText)
+            display.delete(1.0, END)
+            display.insert(INSERT, plnText)
+    else:
+        messagebox.showerror(title="Error", message="Please Provide a key and an IV!")
+        keyEntry.focus_set()
 
 
 # Custom window class definition
@@ -181,6 +184,7 @@ class Window(Frame):
         actionMenu.add_command(label="Decrypt", command=decrypt_callback)
         actionMenu.add_command(label="Encrypt", command=encrypt_callback)
         actionMenu.add_command(label="Generate key", command=generate_key_callback)
+        actionMenu.add_command(label="Clear", command=clear_callback)
 
         helpMenu = Menu(menu)
         menu.add_cascade(label="Help", menu=helpMenu)
@@ -197,7 +201,7 @@ root = Tk()
 cipher = MyCipher()
 crypto_app = Window(root)
 crypto_app.master.title("Cryptographer1.0")
-root.geometry("650x350")
+root.geometry("750x650")
 crypto_app.master.protocol("WM_DELETE_WINDOW", quitApp)
 
 # File entry input widget definition
@@ -229,16 +233,20 @@ ivTf = StringVar()
 ivEntry = Entry(frame3, textvariable=ivTf)
 ivEntry.bind("<Return>", iv_callback)
 ivEntry.pack(fill=X, padx=5, expand=True)
+frameD = Frame()
+displayLabel = Label(frameD, text="OUTPUT", anchor=CENTER)
+displayLabel.pack()
+frameD.pack(fill=X, expand=FALSE)
 
-# Output widget definition
-frame4 = Frame()
-outputLabel = Label(frame4, text="Output:", width=9)
-outputLabel.pack(side=LEFT, padx=5, pady=5)
-outputResult = StringVar()
-outputText = Label(frame4, textvariable=outputResult,
-                   bg="black", fg="white",
-                   takefocus=TRUE, justify=LEFT)
-outputText.pack(fill=X, padx=5, pady=5, expand=TRUE)
+frame4 = Frame(bd=2, relief=SUNKEN)
+frame4.grid_rowconfigure(0, weight=1)
+frame4.grid_columnconfigure(0, weight=1)
+yScrollbar = Scrollbar(frame4)
+yScrollbar.grid(row=0, column=1, sticky=N+S)
+display = Text(frame4, wrap=WORD, bd=0, yscrollcommand=yScrollbar.set,
+               foreground="white", background="black")
+display.grid(row=0, column=0, sticky=N+S+E+W)
+yScrollbar.config(command=display.yview)
 frame4.pack(fill=X, expand=FALSE)
 
 #  Buttons widget definition
@@ -255,16 +263,3 @@ encryptButton.pack(side=RIGHT, padx=5)
 status = Label(root, text="Cryptographer_1.0 \u00AE All rights reserved", justify=CENTER)
 status.pack(side=BOTTOM, padx=5, pady=5, anchor=S)
 crypto_app.mainloop()
-
-######################### Test codes ##############################
-# print("Key: " + keyString.get() + "\n", "IV: " + ivTf.get())
-# print("Content: " + readfile(filename.get()))
-# keyTf = bytearray()
-# print("Content: " + plnText)
-# keyTf.extend(mykey)
-# keyString.set(mykey.hex().upper())
-# print("IV: " + c[0] + "\n", "Cipher Text: " + c[1])
-# scrollbar = Scrollbar(frame4)
-# scrollbar.pack(side=RIGHT, fill=Y)
-# scrollbar.config(command="")
-

@@ -1,1 +1,4 @@
 The quick brown fox jumps over the lazy dog.
+Cryptography is an interesting subject of study.
+Python makes this project short and fun.
+We really enjoy working on the encryption project.
