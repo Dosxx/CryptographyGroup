@@ -9,12 +9,16 @@ from Crypto.Util.Padding import pad, unpad
 
 
 # noinspection PyMethodMayBeStatic
+from PIL.ImageTk import PhotoImage
+
+
 class MyCipher:
     def encryptAES_128(self, plaintext, key):
         try:
             if type(plaintext) != bytes:
                 # Convert to byte if not already a byte
                 plaintext = str.encode(plaintext)
+
             cipher = AES.new(b64decode(key), AES.MODE_CBC)
             encrypted = cipher.encrypt(pad(plaintext, AES.block_size))
             ciphertext = b64encode(encrypted).decode('utf-8')
@@ -29,7 +33,7 @@ class MyCipher:
         try:
             ciphertext = b64decode(ciphertext)
             cipher = AES.new(b64decode(key), AES.MODE_CBC, b64decode(iv))
-            plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size).decode()
+            plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size)
             return plaintext
         except ValueError as error:
             if error.args[0] == "Incorrect padding":
@@ -44,6 +48,39 @@ class MyCipher:
         keyString = b64encode(get_random_bytes(16)).decode('utf-8')
         return keyString
 
+    # def encryptAES(self, plaintext, key):
+    #     try:
+    #         if type(plaintext) != bytes:
+    #             # Convert to byte if not already a byte
+    #             plaintext = str.encode(plaintext)
+    #
+    #         cipher = AES.new(key, AES.MODE_CBC)
+    #         encrypted = cipher.encrypt(pad(plaintext, AES.block_size))
+    #         result = (cipher.iv, encrypted)
+    #         return result
+    #     except ValueError as error:
+    #         if error.args[0] == "Incorrect padding":
+    #             error = "Wong Key Length"
+    #             return error
+    #
+    # def decryptAES(self, key, iv, ciphertext):
+    #     try:
+    #         ciphertext = ciphertext
+    #         cipher = AES.new(key, AES.MODE_CBC, iv)
+    #         plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size)
+    #         return plaintext
+    #     except ValueError as error:
+    #         if error.args[0] == "Incorrect padding":
+    #             error = "Wrong key or IV provided"
+    #             return error
+    #         elif error.args[0] == "utf-8":
+    #             error = "Incorrect Encoding"
+    #             return error
+    #
+    # def keygen(self):
+    #     # Generate a random 16-bytes (128-bits)key and return it to the caller
+    #     keyString = get_random_bytes(16)
+    #     return keyString
 
 ################### Test codes ###############################
 # c = MyCipher()

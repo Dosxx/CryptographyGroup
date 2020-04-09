@@ -1,13 +1,13 @@
 # ICS483 Group Project
 # Authors: Kekeli D Akouete, Vang Uni A
 # Implementing encryption in an application
-
-from base64 import b64decode
+import io
 from tkinter import filedialog
 from tkinter import *
 from tkinter import messagebox
 import os
 from MyCipher import MyCipher
+from PIL import Image, ImageTk
 
 
 # Callbacks to entry fields
@@ -79,17 +79,21 @@ def openfile():
 
 # Definition of the read method which takes a file
 def readfile(file):
-    if os.path.exists(file):
-        if file.__contains__(".txt"):
-            with open(file, "r") as fd:
-                file_content = fd.read()
-                return file_content
-        elif file.__contains__(".png") or file.__contains__(".jpeg") or file.__contains__(".jpg"):
-            with open(file, "rb") as fd:
-                file_content = fd.read()
-                return "File Not Supported"  # file_content
-    else:
-        return "File not found"
+    if file.__contains__(".txt"):
+        # Read a text file mode
+        with open(file, "r") as fd:
+            file_content = fd.read()
+            return file_content
+    elif file.__contains__(".png") or file.__contains__(".jpeg") or file.__contains__(".jpg"):
+        # Read image file mode
+        try:
+            with Image.open(file) as im:
+                buf = io.BytesIO()
+                im.save(buf, format='JPEG')
+                byte_image = buf.getvalue()
+            return byte_image
+        except IOError:
+            messagebox.showerror(title="Error", message=IOError)
 
 
 # Definition of the write method
@@ -113,20 +117,16 @@ def encrypt_callback():
         # Request the input file
         messagebox.showerror(title="Error", message="Please Select a Valid File Path!")
         fileEntry.focus_set()
+    elif not os.path.exists(filename.get()):
+        # Validate the input file path
+        messagebox.showerror(title="Error", message="File Not Found!")
+        fileEntry.focus_set()
     elif len(keyString.get()) < 24:
         # Validate the key and key length
         messagebox.showerror(title="Error", message="Please Enter a valid Key!")
         keyEntry.focus_set()
-    elif readfile(filename.get()).__contains__("File not found"):
-        # Validate the input file path
-        messagebox.showerror(title="Error", message="File Not Found!")
-        fileEntry.focus_set()
-    elif len(readfile(filename.get())) == 0:
+    elif filename.get().__contains__(".txt") and len(readfile(filename.get())) == 0:
         messagebox.showerror(title="Error", message="File is Empty")
-        fileEntry.focus_set()
-    elif readfile(filename.get()).__contains__("Not Supported"):
-        messagebox.showwarning(title="Error", message="File Not Supported")
-        clear_callback()
         fileEntry.focus_set()
     else:
         # Encryption process
@@ -148,16 +148,28 @@ def decrypt_callback():
             messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            display.delete(1.0, END)
-            display.insert(INSERT, plnText)
+            if filename.get().__contains__(".txt"):
+                display.delete(1.0, END)
+                display.insert(INSERT, plnText)
+            else:
+                photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
+                display.delete(1.0, END)
+                display.image_create(INSERT, image=photo)
+                display.image = photo
     elif keyString.get() != '' and ivTf.get() != '':
         plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), readfile(filename.get()))
         if plnText == "Wrong key or IV provided":
             messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            display.delete(1.0, END)
-            display.insert(INSERT, plnText)
+            if filename.get().__contains__(".txt"):
+                display.delete(1.0, END)
+                display.insert(INSERT, plnText)
+            else:
+                photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
+                display.delete(1.0, END)
+                display.image_create(INSERT, image=photo)
+                display.image = photo
     else:
         messagebox.showerror(title="Error", message="Please Provide a key and an IV!")
         keyEntry.focus_set()
@@ -247,7 +259,7 @@ display = Text(frame4, wrap=WORD, bd=0, yscrollcommand=yScrollbar.set,
                foreground="white", background="black")
 display.grid(row=0, column=0, sticky=N+S+E+W)
 yScrollbar.config(command=display.yview)
-frame4.pack(fill=X, expand=FALSE)
+frame4.pack(fill=X, padx=25, expand=FALSE)
 
 #  Buttons widget definition
 frame5 = Frame(relief=RAISED, borderwidth=0)
