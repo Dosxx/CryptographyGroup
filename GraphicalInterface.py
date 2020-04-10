@@ -106,7 +106,7 @@ def readfile(file):
         with open(file, "rb") as fd:
             file_content = fd.read()
             return file_content
-    elif file.__contains__(".png") or file.__contains__(".jpeg") or file.__contains__(".jpg"):
+    elif file.__contains__(".jpeg") or file.__contains__(".jpg"):
         # Read image file mode
         try:
             with Image.open(file) as im:
