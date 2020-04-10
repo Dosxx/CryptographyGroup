@@ -2,6 +2,7 @@
 # Authors: Kekeli D Akouete, Vang Uni A
 # Implementing encryption in an application
 import io
+from base64 import b64decode
 from tkinter import filedialog
 from tkinter import *
 from tkinter import messagebox
@@ -47,14 +48,35 @@ def saveKey():
         fname = filedialog.asksaveasfilename()
         if fname:
             # Saving your key and IV to a file of your choice
-            keys = "Key={} \nIV={}".format(keyString.get(), ivTf.get())
+            keys = "Key {} \nIV {}".format(keyString.get(), ivTf.get())
             writefile(keys, fname)
+
+
+# Import saved keys from a file
+def import_key():
+    keys = {}
+    keyFile = filedialog.askopenfilename()
+    with open(keyFile) as fd:
+        for line in fd:
+            (key, val) = line.split()
+            keys[key] = val
+    keyString.set(keys.get("Key"))
+    ivTf.set(keys.get("IV"))
 
 
 # Display the help menu for instruction
 def showhelp():
     # Instruction on how to use the application
     messagebox.showinfo(title="About", message=readfile("help.txt"))
+
+
+# Check if the file is an image
+def is_jpg(content):
+    try:
+        image = Image.open(io.BytesIO(content))
+        return image.format == "JPEG"
+    except IOError:
+        return False
 
 
 # Prompt to browse a file directory
@@ -81,25 +103,26 @@ def openfile():
 def readfile(file):
     if file.__contains__(".txt"):
         # Read a text file mode
-        with open(file, "r") as fd:
+        with open(file, "rb") as fd:
             file_content = fd.read()
             return file_content
     elif file.__contains__(".png") or file.__contains__(".jpeg") or file.__contains__(".jpg"):
         # Read image file mode
         try:
             with Image.open(file) as im:
-                buf = io.BytesIO()
-                im.save(buf, format='JPEG')
-                byte_image = buf.getvalue()
+                buffer = io.BytesIO()
+                im.save(buffer, format='JPEG')
+                byte_image = buffer.getvalue()
             return byte_image
         except IOError:
-            messagebox.showerror(title="Error", message=IOError)
+            messagebox.showerror(title="Error", message="Could not read the Image")
+            pass
 
 
 # Definition of the write method
 def writefile(context, file):
     if type(context) == bytes:
-        context.decode()
+        context = b64decode(context)
     with open(file, "w") as fd:
         fd.write(context)
         fd.seek(0)
@@ -148,28 +171,28 @@ def decrypt_callback():
             messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            if filename.get().__contains__(".txt"):
-                display.delete(1.0, END)
-                display.insert(INSERT, plnText)
-            else:
+            if is_jpg(plnText):
                 photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
                 display.delete(1.0, END)
                 display.image_create(INSERT, image=photo)
                 display.image = photo
+            else:
+                display.delete(1.0, END)
+                display.insert(INSERT, plnText)
     elif keyString.get() != '' and ivTf.get() != '':
         plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), readfile(filename.get()))
         if plnText == "Wrong key or IV provided":
             messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            if filename.get().__contains__(".txt"):
-                display.delete(1.0, END)
-                display.insert(INSERT, plnText)
-            else:
+            if is_jpg(plnText):
                 photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
                 display.delete(1.0, END)
                 display.image_create(INSERT, image=photo)
                 display.image = photo
+            else:
+                display.delete(1.0, END)
+                display.insert(INSERT, plnText)
     else:
         messagebox.showerror(title="Error", message="Please Provide a key and an IV!")
         keyEntry.focus_set()
@@ -189,6 +212,7 @@ class Window(Frame):
         fileMenu.add_command(label="Open", command=openfile)
         fileMenu.add_command(label="Save As", command=saveAs)
         fileMenu.add_command(label="Save Keys", command=saveKey)
+        fileMenu.add_command(label="Import Keys", command=import_key)
         fileMenu.add_command(label="Exit", command=quitApp)
 
         actionMenu = Menu(menu)
@@ -224,17 +248,17 @@ fileLabel.pack(side=LEFT, padx=5, pady=5)
 filename = StringVar()
 fileEntry = Entry(frame1, textvariable=filename)
 fileEntry.bind("<Return>", file_callback)
-fileEntry.pack(fill=X, padx=5, expand=True)
+fileEntry.pack(anchor=W, fill=X, padx=25, expand=True)
 
 # Key entry input widget definition
 frame2 = Frame()
 frame2.pack(fill=X)
-keyLabel = Label(frame2, text="Key:", width=9)
-keyLabel.pack(side=LEFT, padx=5, pady=5)
+keygenButton = Button(frame2, text="Key/gen", command=generate_key_callback)
+keygenButton.pack(side=LEFT, padx=12, pady=5)
 keyString = StringVar()
 keyEntry = Entry(frame2, textvariable=keyString)
 keyEntry.bind("<Return>", key_callback)
-keyEntry.pack(fill=X, padx=5, expand=True)
+keyEntry.pack(fill=X, padx=25, expand=True)
 
 # IV entry input widget definition
 frame3 = Frame()
@@ -244,12 +268,12 @@ ivLabel.pack(side=LEFT, padx=5, pady=5)
 ivTf = StringVar()
 ivEntry = Entry(frame3, textvariable=ivTf)
 ivEntry.bind("<Return>", iv_callback)
-ivEntry.pack(fill=X, padx=5, expand=True)
+ivEntry.pack(fill=X, padx=25, expand=True)
 frameD = Frame()
 displayLabel = Label(frameD, text="OUTPUT", anchor=CENTER)
 displayLabel.pack()
 frameD.pack(fill=X, expand=FALSE)
-
+# Display widget definition
 frame4 = Frame(bd=2, relief=SUNKEN)
 frame4.grid_rowconfigure(0, weight=1)
 frame4.grid_columnconfigure(0, weight=1)
@@ -261,15 +285,15 @@ display.grid(row=0, column=0, sticky=N+S+E+W)
 yScrollbar.config(command=display.yview)
 frame4.pack(fill=X, padx=25, expand=FALSE)
 
-#  Buttons widget definition
+# Buttons widget definition
 frame5 = Frame(relief=RAISED, borderwidth=0)
 frame5.pack(fill=BOTH, expand=True)
 clearButton = Button(frame5, text="Clear", command=clear_callback)
-clearButton.pack(side=RIGHT, padx=5)
+clearButton.pack(side=RIGHT, padx=20)
 decryptButton = Button(frame5, text="Decrypt", command=decrypt_callback)
-decryptButton.pack(side=RIGHT, padx=5, pady=5)
+decryptButton.pack(side=RIGHT, padx=15)
 encryptButton = Button(frame5, text="Encrypt", command=encrypt_callback)
-encryptButton.pack(side=RIGHT, padx=5)
+encryptButton.pack(side=RIGHT, padx=15)
 
 # the application footer note
 status = Label(root, text="Cryptographer_1.0 \u00AE All rights reserved", justify=CENTER)

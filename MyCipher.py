@@ -10,6 +10,7 @@ from Crypto.Util.Padding import pad, unpad
 
 class MyCipher:
     def encryptAES_128(self, plaintext, key):
+        # Takes in a string or bytes and return a string
         try:
             if type(plaintext) != bytes:
                 # Convert to byte if not already a byte
@@ -26,6 +27,7 @@ class MyCipher:
                 return error
 
     def decryptAES_128(self, key, iv, ciphertext):
+        # take in a string and return a byte
         try:
             ciphertext = b64decode(ciphertext)
             cipher = AES.new(b64decode(key), AES.MODE_CBC, b64decode(iv))
