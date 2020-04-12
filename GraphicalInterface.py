@@ -56,12 +56,13 @@ def saveKey():
 def import_key():
     keys = {}
     keyFile = filedialog.askopenfilename()
-    with open(keyFile) as fd:
-        for line in fd:
-            (key, val) = line.split()
-            keys[key] = val
-    keyString.set(keys.get("Key"))
-    ivTf.set(keys.get("IV"))
+    if keyFile:
+        with open(keyFile) as fd:
+            for line in fd:
+                (key, val) = line.split()
+                keys[key] = val
+        keyString.set(keys.get("Key"))
+        ivTf.set(keys.get("IV"))
 
 
 # Display the help menu for instruction
@@ -171,31 +172,28 @@ def decrypt_callback():
             messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            if is_jpg(plnText):
-                photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
-                display.delete(1.0, END)
-                display.image_create(INSERT, image=photo)
-                display.image = photo
-            else:
-                display.delete(1.0, END)
-                display.insert(INSERT, plnText)
+            render_output(plnText)
     elif keyString.get() != '' and ivTf.get() != '':
         plnText = cipher.decryptAES_128(keyString.get(), ivTf.get(), readfile(filename.get()))
         if plnText == "Wrong key or IV provided":
             messagebox.showerror(title="Error", message=plnText)
             keyEntry.focus_set()
         else:
-            if is_jpg(plnText):
-                photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
-                display.delete(1.0, END)
-                display.image_create(INSERT, image=photo)
-                display.image = photo
-            else:
-                display.delete(1.0, END)
-                display.insert(INSERT, plnText)
+            render_output(plnText)
     else:
         messagebox.showerror(title="Error", message="Please Provide a key and an IV!")
         keyEntry.focus_set()
+
+
+def render_output(plnText):
+    if is_jpg(plnText):
+        photo = ImageTk.PhotoImage(Image.open(io.BytesIO(plnText)))
+        display.delete(1.0, END)
+        display.image_create(INSERT, image=photo)
+        display.image = photo
+    else:
+        display.delete(1.0, END)
+        display.insert(INSERT, plnText)
 
 
 # Custom window class definition
